@@ -80,6 +80,15 @@ class Conversation < RoleRecord
     if Array(options[:include]).include? :comments
       base[:comments] = comments.map{|c| c.to_api_hash(options)}
     end
+
+    if Array(options[:include]).include? :users
+      base[:user] = {
+        :username => user.login,
+        :first_name => user.first_name,
+        :last_name => user.last_name,
+        :avatar_url => user.avatar_or_gravatar_url(:thumb)
+      }
+    end
     
     base
   end
