@@ -5,14 +5,15 @@ module MustacheHelper
     comments = Conversation.last.comments
 
     javascript_tag %(
-      document.on('dom:loaded', function() {
-        var thread = #{thread.to_json(:include => :users)}
-        var comments = #{comments.to_json(:include => :users)}
+      var thread = #{thread.to_json(:include => :users)}
+      var comments = #{comments.to_json(:include => :users)}
 
-        $('activities').insert({
-          before: Render.thread(thread, comments)
-        })
+      document.on('dom:loaded', function() {
+        //$('activities').insert({
+        //  before: Render.thread(thread, comments)
+        //})
       })
+
     )
   end
 
