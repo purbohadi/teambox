@@ -1,6 +1,7 @@
 require 'net/pop'
 require 'net/imap'
 require 'net/http'
+require 'action_view/helpers/text_helper'
 
 # Receives email
 #
@@ -22,7 +23,8 @@ require 'net/http'
 # Invalid or malformed emails will be ignored and sometimes bounced to the receiver.
 
 module Emailer::Incoming
-  
+  include ActionView::Helpers::TextHelper
+
   def self.fetch(settings)
     type = settings[:type].to_s.downcase
     send("fetch_#{type}", settings)
@@ -76,7 +78,7 @@ module Emailer::Incoming
     email = ParamsMail.new(email) if Hash === email
     
     # TODO: cleanup this convoluted logic and ease a bit on the ivars pls
-    process email
+    process_incoming email
     get_target email
     get_action if @target.is_a?(Task)
     
@@ -137,8 +139,9 @@ module Emailer::Incoming
     def field_to_addr(field)
       value = @params[field.to_sym]
       return if value.blank?
-      header = TMail::AddressHeader.new(field.to_s, value)
-      header.addrs.map &:spec
+      # RAILS3 report bug, this doesn't parse with a newline char at the end
+      header = Mail::Field.new(field.to_s, value.strip)
+      header.addrs.map &:address
     end
     
     def field_to_utf8(field)
@@ -177,7 +180,9 @@ module Emailer::Incoming
   class TargetNotFoundError < Error; end
 
   # accepts params in Sendgrid's format: http://wiki.sendgrid.com/doku.php?id=parse_api
-  def process(email)
+  # RAILS3 renamed from process as was conflicting with ActionMailer::Base#process
+  # RAILS3 check where used
+  def process_incoming(email)
     raise MissingInfo, "Invalid mail body" if email.body.blank?
     
     from = Array(email.from).first
@@ -196,16 +201,22 @@ module Emailer::Incoming
     raise UserNotFoundError.new(email, "Invalid user '#{email.from.first}'") unless @user
     raise NotProjectMemberError.new(email, "User does not belong to project") unless @user.projects.include? @project
     
-    @body    = strip_responses(email.body)
-    @subject = email.subject.gsub(REPLY_REGEX, "").strip
+    #strip any remaining html tags (after strip_responses) from the body
+    @body    = strip_responses(email.body).strip_tags.to_s.strip
+    @subject = email.subject.to_s.gsub(REPLY_REGEX, "").strip
     @files   = email.attachments || []
     
     Rails.logger.info "#{@user.name} <#{@user.email}> sent '#{@subject}' to #{@to}"
   end
   
+  # Removes 'On ... bla bla wrote line'
+  # Splits emails on answer line and takes top half
+  # Gmail adds <div class='email' to indicate where real message begins
+  # so we split on that too and again take top half
+  # finally strip any whitespace
   def strip_responses(body)
     # For GMail. Matches "On 19 August 2010 13:48, User <proj+conversation+22245@app.teambox.com<proj%2Bconversation%2B22245@app.teambox.com>> wrote:"
-    body.strip.
+    body.to_s.strip.
       gsub(/\n[^\r\n]*\d{2,4}.*\+.*\d@app.teambox.com.*:.*\z/m, '').
       split(Emailer::ANSWER_LINE).first.
       split("<div class='email'").first.
@@ -310,7 +321,7 @@ module Emailer::Incoming
     end
     
     task = task_list.tasks.create! do |task|
-      task.name = @subject.blank? ? @body : @subject
+      task.name = @subject.blank? ? truncate(@body, :length => 255) : @subject
       task.project = @project
       task.user = @user
     end

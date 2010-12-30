@@ -1,18 +1,5 @@
 # Methods added to this helper will be available to all templates in the application.
 module ApplicationHelper
-
-  def current_user_tag
-    %(<meta name='current-username' content='#{current_user.login}'/>)
-  end
-
-  def csrf_meta_tag
-    if protect_against_forgery?
-      out = %(<meta name="csrf-param" content="%s"/>\n)
-      out << %(<meta name="csrf-token" content="%s"/>)
-      out % [ Rack::Utils.escape_html(request_forgery_protection_token),
-              Rack::Utils.escape_html(form_authenticity_token) ]
-    end
-  end
   
   def content_for(*args)
     super unless args.first.to_sym == :column and mobile?
@@ -155,7 +142,7 @@ module ApplicationHelper
     when Array then errors.first
     when String then errors
     end
-    "<div class='errors_for'>#{error}</div>"
+    "<div class='errors_for'>#{error}</div>".html_safe
   end
 
   def formatting_documentation_link
@@ -201,7 +188,7 @@ module ApplicationHelper
   end
   
   def time_tracking_enabled?
-    APP_CONFIG['allow_time_tracking'] || false
+    Teambox.config.allow_time_tracking || false
   end
   
   def auto_discovery_link_by_context(user, project)
@@ -220,7 +207,7 @@ module ApplicationHelper
       end
       %(<div style="background-color: rgb(255,255,220); border-bottom: 1px solid rgb(200,200,150); width: 100%; display: block; font-size: 12px; padding: 10px 0; text-align: center">
         #{message}
-      </div>)
+      </div>).html_safe
     end
   end
   
@@ -234,7 +221,35 @@ module ApplicationHelper
   def tracking_code
     if Teambox.config.tracking_enabled and Rails.env.production?
       fake_img = "http://teambox.com/logo.png/#{request.host}"
-      %(<div style="background-image: url(#{fake_img})"></div>)
+      %(<div style="background-image: url(#{fake_img})"></div>).html_safe
+    end
+  end
+
+  def organization_link_colour
+    "".tap do |html|
+      html << '<style type="text/css">'
+      html << "a { color: ##{@organization ? @organization.settings['colours']['links'] : ''};}"
+      html << "a:hover { color: ##{@organization ? @organization.settings['colours']['link_hover'] : ''};}"
+      html << "body { font-color: ##{@organization ? @organization.settings['colours']['text'] : ''};}"
+      html << '</style>'
+    end.html_safe
+  end
+
+  def organization_header_bar_colour
+    "background: ##{@organization ? @organization.settings['colours']['header_bar'] : ''};"
+  end
+
+  def custom_organization_colour_field(f, organization, field)
+    colour = organization.settings['colours'][field]
+    "".tap do |html|
+      html << f.hidden_field(:settings, :id => "organization_settings_colours_#{field}", :name => "organization[settings][colours][#{field}]", :value => colour)
+      html << content_tag('button', '', :id => "organization_settings_colours_#{field}_swatch", :class => 'colorbox', :style=>"width: 56px; height: 56px; border: 1px outset #666; cursor: crosshair;")
+    end.html_safe
+  end
+
+  def preview_button
+    content_tag(:button, :'data-alternate' => t('comments.preview.close'), :class => :preview) do
+      t('comments.preview.preview')
     end
   end
 end

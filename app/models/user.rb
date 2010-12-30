@@ -4,10 +4,10 @@ require 'digest/sha1'
 # A Person model describes the relationship of a User that follows a Project.
 
 class User < ActiveRecord::Base
+  include Immortal
 
-  include ActionController::UrlWriter
+  include Rails.application.routes.url_helpers
 
-  acts_as_paranoid
   concerned_with  :activation,
                   :avatar,
                   :authentication,
@@ -17,8 +17,6 @@ class User < ActiveRecord::Base
                   :scopes,
                   :validation,
                   :task_reminders
-
-  LOCALE_CODES = I18n.available_locales.map(&:to_s)
 
   has_many :projects_owned, :class_name => 'Project', :foreign_key => 'user_id'
   has_many :comments
@@ -38,6 +36,8 @@ class User < ActiveRecord::Base
 
   has_one :card
   accepts_nested_attributes_for :card
+  default_scope :order => 'users.updated_at DESC'
+  scope :in_alphabetical_order, :order => 'users.first_name ASC'
 
   attr_accessible :login,
                   :email,
@@ -61,14 +61,18 @@ class User < ActiveRecord::Base
 
   before_validation :sanitize_name
   before_destroy :rename_as_deleted
+  
+  before_create :init_user
+  after_create :clear_invites
+  before_save :update_token
 
-  def before_save
+  def update_token
     self.recent_projects_ids ||= []
     self.rss_token ||= generate_rss_token
     self.visited_at ||= Time.now
   end
 
-  def before_create
+  def init_user
     if invitation = Invitation.find_by_email(email)
       self.invited_by = invitation.user
       invitation.user.update_attribute :invited_count, (invitation.user.invited_count + 1)
@@ -76,7 +80,7 @@ class User < ActiveRecord::Base
     self.splash_screen = true
   end
 
-  def after_create
+  def clear_invites
     send_activation_email unless self.confirmed_user
 
     if invitations = Invitation.find_all_by_email(email)
@@ -109,7 +113,7 @@ class User < ActiveRecord::Base
   end
   
   def locale
-    if LOCALE_CODES.include? self[:locale]
+    if I18n.available_locales.map(&:to_s).include? self[:locale]
       self[:locale]
     else
       I18n.default_locale.to_s
@@ -162,25 +166,14 @@ class User < ActiveRecord::Base
   end
 
   def contacts_not_in_project(project)
-    conditions = ["project_id IN (?)", Array(self.projects).collect{ |p| p.id } ]
+    user_ids_not_in_project = User.where(:people => {:project_id => self.projects}).
+      joins(:people).
+      select('users.id').
+      limit(300).map(&:id)
+    user_ids_in_project = project.user_ids
+    user_ids = user_ids_not_in_project.reject! { |u| user_ids_in_project.include?(u) }.uniq
 
-    people = Person.find(:all,
-      :select => 'user_id',
-      :conditions => conditions,
-      :limit => 300)
-
-    user_ids_in_project = project.users.collect { |u| u.id }
-
-    user_ids = people.reject! do |p|
-      user_ids_in_project.include?(p.user_id)
-    end.collect { |p| p.user_id }.uniq
-
-    conditions = ["id IN (?) AND deleted_at IS NULL", user_ids]
-
-    User.find(:all,
-      :conditions => conditions,
-      :order => 'updated_at DESC',
-      :limit => 10)
+    User.where(:id => user_ids[0, 10]).order('updated_at DESC')
   end
 
   def to_xml(options = {})
@@ -247,7 +240,7 @@ class User < ActiveRecord::Base
       :select => 'user_id',
       :conditions => conditions,
       :limit => 300).collect { |p| p.user_id }.uniq
-    conditions = ["id IN (?) AND deleted_at IS NULL AND id != (?)", user_ids, self.id]
+    conditions = ["id IN (?) AND deleted = ? AND id != (?)", user_ids, false, self.id]
     User.find(:all,
       :conditions => conditions,
       :order => 'updated_at DESC',
@@ -277,11 +270,13 @@ class User < ActiveRecord::Base
     update_attribute :email, Regexp.last_match(1).to_s if email =~ DELETED_REGEX
   end
 
-  def link_to_app(provider, uid)
+  def link_to_app(provider, uid, credentials)
     link = AppLink.new
     link.user              = self
     link.provider          = provider
     link.app_user_id       = uid
+    link.access_token      = credentials ? credentials[:token] : nil
+    link.access_secret     = credentials ? credentials[:secret] : nil
     link.save!
   end
 
@@ -309,7 +304,15 @@ class User < ActiveRecord::Base
       []
     end
   end
-  
+
+  def tasks_counts_update
+    assigned_tasks = Task.assigned_to(self)
+    # we do t.statys && t.status < 3 because some tasks might be 
+    self.assigned_tasks_count  = assigned_tasks.select { |t| t.status == 1 }.length
+    self.completed_tasks_count = assigned_tasks.select { |t| t.status == 3 }.length
+    self.save
+  end
+
   def users_for_user_map
     @users_for_user_map ||= self.organizations.map{|o| o.users + o.users_in_projects }.flatten.uniq
   end

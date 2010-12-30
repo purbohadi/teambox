@@ -94,7 +94,7 @@ describe User do
 
     describe "activation email" do
       it "should send an activation email" do
-        Emailer.should_receive(:deliver_confirm_email).with(@user).once
+        Emailer.should_receive(:send_with_language).with(:confirm_email, :en, @user.id).once
         @user.send_activation_email
       end
 
@@ -220,13 +220,13 @@ describe User do
 
     it "should send an activation email when signing up without an invitation" do
       @user = Factory.build(:unconfirmed_user)
-      Emailer.should_receive(:deliver_confirm_email).once
+      Emailer.should_receive(:send_with_language).once
       @user.save
     end
 
     it "should not send an activation email if the user is active when created, for example, when invited" do
       @user = Factory.build(:user, :confirmed_user => true)
-      Emailer.should_not_receive(:deliver_confirm_email)
+      Emailer.should_not_receive(:send_with_language)
       @user.save
     end
 
@@ -460,7 +460,7 @@ describe User do
       [:resolved, :hold, :rejected].each do |status|
         @task.assign_to @user
         @task.status_name = status
-        @task.save(false)
+        @task.save(:validate => false)
         @user.pending_tasks.should be_empty
       end
     end
@@ -470,6 +470,26 @@ describe User do
       @user.pending_tasks.should be_empty
     end
   end
+
+  describe "#assigned_tasks_count" do
+    before do
+      @user = Factory.create(:user)
+      @participant = Factory.create(:user)
+      @task = Factory.create(:task, :status => 0)
+      @task.project.add_user @user
+    end
+    it "should return assigned tasks count" do
+      @task.assign_to(@user)
+
+      @user.reload
+      @user.assigned_tasks_count.should == 1
+
+      @task.assign_to(@participant)
+      @user.reload
+      @user.assigned_tasks_count.should == 0
+    end
+  end
+
 
   describe "last visit tracking" do
     before do

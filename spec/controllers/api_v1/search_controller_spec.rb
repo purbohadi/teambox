@@ -6,10 +6,10 @@ describe ApiV1::SearchController do
       @user = login_as(:confirmed_user)
       @project = Factory.create :project, :user => @user, :permalink => 'important-project'
       @comment = Factory.create :comment, :project => @project
-      @results = mock('results', {:map => [@comment.to_api_hash], :is_a? => true})
     end
     
     it "searches across all user's projects" do
+      @results = mock('results', {:map => [@comment.to_api_hash], :each => true})
       controller.stub!(:user_can_search?).and_return(true)
       
       p1 = @project
@@ -25,14 +25,26 @@ describe ApiV1::SearchController do
       assigns[:search_terms].should == 'important'
     end
     
+    it "returns an empty array for blank searches" do
+      controller.stub!(:user_can_search?).and_return(true)
+      
+      p1 = @project
+      p2 = Factory.create :project, :user => @user
+      
+      get :index
+      response.should be_success
+      JSON.parse(response.body)['objects'].length.should == 0
+    end
+    
     it "rejects unauthorized search" do
       controller.stub!(:user_can_search?).and_return(false)
       
       get :index, :q => 'important'
-      ['501 Not Implemented', '403 Forbidden'].include?(response.status).should == true
+      [501, 403].include?(response.status).should == true
     end
     
     it "searches in a single project" do
+      @results = mock('results', {:map => [@comment.to_api_hash], :each => true})
       controller.stub!(:user_can_search?).and_return(false)
       
       Factory.create :person, :user => @user, :project => @project
@@ -50,7 +62,7 @@ describe ApiV1::SearchController do
     
     it "reject searching in unauthorized project" do
       get :index, :q => 'important', :project_id => @project.permalink
-      response.status.should == (Teambox.config.allow_search ? '403 Forbidden' : '501 Not Implemented')
+      response.status.should == (Teambox.config.allow_search ? 403 : 501)
     end
     
     def search_params(project_ids)

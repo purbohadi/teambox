@@ -4,7 +4,7 @@ describe ApiV1::ConversationsController do
   before do
     make_a_typical_project
     
-    @conversation = @project.new_conversation(@user, {:name => 'Something needs to be done'})
+    @conversation = @project.new_conversation(@owner, {:name => 'Something needs to be done'})
     @conversation.body = 'Hell yes!'
     @conversation.save!
     
@@ -48,10 +48,10 @@ describe ApiV1::ConversationsController do
     it "shows conversations created by a user" do
       login_as @user
       
-      get :index, :user_id => @user.id
+      get :index, :user_id => @owner.id
       response.should be_success
       
-      JSON.parse(response.body)['objects'].length.should == 2
+      JSON.parse(response.body)['objects'].map{|o|o['id']}.should == [@conversation.id]
     end
     
     it "shows no conversations created by a fictious user" do
@@ -149,7 +149,7 @@ describe ApiV1::ConversationsController do
       login_as @observer
       
       post :create, :project_id => @project.permalink, :name => 'Created!', :body => 'Discuss...'
-      response.status.should == '401 Unauthorized'
+      response.status.should == 401
       
       @project.conversations(true).length.should == 2
     end
@@ -169,7 +169,7 @@ describe ApiV1::ConversationsController do
       login_as @observer
       
       put :update, :project_id => @project.permalink, :id => @conversation.id, :name => 'Modified'
-      response.status.should == '401 Unauthorized'
+      response.status.should == 401
       
       @conversation.reload.name.should_not == 'Modified'
     end
@@ -185,11 +185,20 @@ describe ApiV1::ConversationsController do
       @project.conversations(true).length.should == 1
     end
     
+    it "should allow the creator to destroy a conversation" do
+      login_as @conversation.user
+      
+      put :destroy, :project_id => @project.permalink, :id => @conversation.id
+      response.should be_success
+      
+      @project.conversations(true).length.should == 1
+    end
+    
     it "should not allow participants to destroy a conversation" do
       login_as @user
       
       put :destroy, :project_id => @project.permalink, :id => @conversation.id
-      response.status.should == '401 Unauthorized'
+      response.status.should == 401
       
       @project.conversations(true).length.should == 2
     end
