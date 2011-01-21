@@ -1,8 +1,7 @@
-# RAILS3 spec this
 require 'mail'
 class EmailValidator < ActiveModel::EachValidator
    def validate_each(record, attribute, value)
-    record.errors[attribute] << (options[:message] || "is invalid") unless EmailValidator.check_address(value)
+    record.errors[attribute] << (options[:message] || "is invalid") unless self.class.check_address(value)
   end
 
   def self.check_address(address)

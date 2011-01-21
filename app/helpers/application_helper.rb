@@ -33,17 +33,6 @@ module ApplicationHelper
     end
   end
 
-  def navigation(project,projects,recent_projects)
-    render 'shared/navigation',
-      :project => project,
-      :projects => projects,
-      :recent_projects => recent_projects
-  end
-
-  def project_navigation(project)
-    render 'shared/project_navigation', :project => project
-  end
-
   def search_bar
     render 'shared/search_bar'
   end
@@ -242,8 +231,8 @@ module ApplicationHelper
   def custom_organization_colour_field(f, organization, field)
     colour = organization.settings['colours'][field]
     "".tap do |html|
-      html << f.hidden_field(:settings, :id => "organization_settings_colours_#{field}", :name => "organization[settings][colours][#{field}]", :value => colour)
-      html << content_tag('button', '', :id => "organization_settings_colours_#{field}_swatch", :class => 'colorbox', :style=>"width: 56px; height: 56px; border: 1px outset #666; cursor: crosshair;")
+      html << f.hidden_field(:settings, :id => "organization_settings_colours_#{field}", :'data-default-color' => Organization.default_settings['colours'][field].upcase, :name => "organization[settings][colours][#{field}]", :value => colour)
+      html << content_tag('button', '', :id => "organization_settings_colours_#{field}_swatch", :class => 'colorbox')
     end.html_safe
   end
 

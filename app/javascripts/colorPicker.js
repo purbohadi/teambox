@@ -31,6 +31,7 @@ Control.ColorPicker.prototype = {
        IMAGE_BASE : "img/"
     }, options || {});
     this.swatch = $(this.options.swatch) || this.field;
+		this.defaultColor = this.options.defaultColor || '000000';
     this.rgb = {};
     this.hsv = {};
     this.isOpen = false;
@@ -51,7 +52,7 @@ Control.ColorPicker.prototype = {
           '<div id="colorpicker-bg-overlay" style="z-index: 1002;"></div>' +
           '<div id="colorpicker-selector"><img src="' + this.options.IMAGE_BASE + 'select.gif" width="11" height="11" alt="" /></div></div>' +
           '<div id="colorpicker-hue-container"><img src="' + this.options.IMAGE_BASE + 'hue.png" id="colorpicker-hue-bg-img"><div id="colorpicker-hue-slider"><div id="colorpicker-hue-thumb"><img src="' + this.options.IMAGE_BASE + 'hline.png"></div></div></div>' +
-          '<div id="colorpicker-footer"><span id="colorpicker-value">#<input type="text" onclick="this.select()" id="colorpicker-value-input" name="colorpicker-value" value=""></input></span><button id="colorpicker-okbutton">OK</button></div>'
+          '<div id="colorpicker-footer"><span id="colorpicker-value">#<input type="text" onclick="this.select()" id="colorpicker-value-input" name="colorpicker-value" value=""></input></span><button id="colorpicker-okbutton">OK</button><button id="colorpicker-resetbutton">OK</button></div>'
         document.body.appendChild(control);
       }
       Control.ColorPicker.CONTROL = {
@@ -59,6 +60,7 @@ Control.ColorPicker.prototype = {
         pickerArea : $('colorpicker-div'),
         selector : $('colorpicker-selector'),
         okButton : $("colorpicker-okbutton"),
+			 	resetButton : $("colorpicker-resetbutton"),
         value : $("colorpicker-value"),
         input : $("colorpicker-value-input"),
         picker : new Draggable($('colorpicker-selector'), {
@@ -90,13 +92,19 @@ Control.ColorPicker.prototype = {
     this.updateOnChangeListener = this.updateFromFieldValue.bindAsEventListener(this);
     this.closeOnClickOkListener = this.close.bindAsEventListener(this);
     this.updateOnClickPickerListener = this.updateSelector.bindAsEventListener(this);
+		this.resetOnClickListener = this.reset.bindAsEventListener(this);
 
     Event.observe(this.swatch, "click", this.toggleOnClickListener);
     Event.observe(this.field, "change", this.updateOnChangeListener);
-    Event.observe(this.control.input, "change", this.updateOnChangeListener);
+    Event.observe(this.control.input, "onchange", this.updateOnChangeListener);
+    Event.observe(this.control.resetButton, "click", this.resetOnClickListener);
 
     this.updateSwatch();
   },
+	reset : function(event) {
+		this.control.input.setValue(this.defaultColor);
+		// How do I call the update?!
+	},
   toggle : function(event) {
     this[(this.isOpen) ? "close" : "open"](event);
     Event.stop(event);
@@ -138,6 +146,7 @@ Control.ColorPicker.prototype = {
     this.update();
   },
   updateFromFieldValue : function(event) {
+		alert("hey")
     if (!this.isOpen) return;
     var field = (event && Event.findElement(event, "input")) || this.field;
     var rgb = YAHOO.util.Color.hex2rgb( field.value );

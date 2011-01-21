@@ -1268,11 +1268,6 @@ ko:
     new: 
       submit: "새로운 테스크 재목 추가"
       title: "새로운 테스크 리스트"
-    overview_box: 
-      ends_on: "종료시점:"
-      starts_on: "시작시점:"
-      this_list: "이 테스크 리스트"
-      undefined: "정해지지 않음"
     primer: 
       create_first: "첫 번째 테스크 리스트를 만드세요!"
       define_html: "테스크를 사용해서<b>미리 계획을 하고</b>, <b>진척상황을 확인</b>하고 <b>무엇이 완료되었는지</b>검토해 보세요.<br/><i>언제, 누가, 무엇을</i>하는지에 대해 확인할 수 있습니다. 테스크는 상태, 할당된 사람, 완료기한을 가질 수 있습니다."
@@ -1410,7 +1405,7 @@ ko:
       tasks_for_today: "오늘의 테스크들"
       tasks_for_tomorrow: "내일의 테스크들"
       tasks_without_a_due_date: "기한이 없는 테스크들"
-      you_receive_this_message: "허락을 하셨기 때문에 이 메세지를 받으셨습니다. %{link}에서 취소하실 수 있습니다."
+      you_receive_this_message_html: "허락을 하셨기 때문에 이 메세지를 받으셨습니다. %{link}에서 취소하실 수 있습니다."
     edit: 
       submit: "계정 업데이트"
       title_delete: "계정 삭제"

@@ -5,15 +5,26 @@ class Comment < ActiveRecord::Base
   
   concerned_with :tasks, :finders, :conversions
 
-  # RAILS3 fix with_deleted
-  belongs_to :user#, :with_deleted => true
+  belongs_to :user
   belongs_to :project
   belongs_to :target, :polymorphic => true, :counter_cache => true
-  belongs_to :assigned, :class_name => 'Person'#, :with_deleted => true
-  belongs_to :previous_assigned, :class_name => 'Person'#, :with_deleted => true
+  belongs_to :assigned, :class_name => 'Person'
+  belongs_to :previous_assigned, :class_name => 'Person'
   
   def task_comment?
     self.target_type == "Task"
+  end
+  
+  def user
+    @user ||= user_id ? User.with_deleted.find_by_id(user_id) : nil
+  end
+  
+  def assigned
+    @assigned ||= assigned_id ? Person.with_deleted.find_by_id(assigned_id) : nil
+  end
+  
+  def previous_assigned
+    @previous_assigned ||= previous_assigned_id ? Person.with_deleted.find_by_id(previous_assigned_id) : nil
   end
 
   has_many :uploads
@@ -27,14 +38,16 @@ class Comment < ActiveRecord::Base
   attr_accessible :body, :status, :assigned, :hours, :human_hours, :billable,
                   :upload_ids, :uploads_attributes, :due_on, :google_docs_attributes
 
+  attr_accessor :is_importing
+
   scope :by_user, lambda { |user| { :conditions => {:user_id => user} } }
   scope :latest, :order => 'id DESC'
 
   # TODO: investigate how we can enable this and not break nested attributes
   # validates_presence_of :target_id, :user_id, :project_id
   
-  validate :check_duplicate, :if => lambda { |c| c.target_id? and not c.hours? }, :on => :create
-  validates_presence_of :body, :unless => lambda { |c| c.task_comment? or c.uploads.to_a.any? }
+  validate :check_duplicate, :if => lambda { |c| !@is_importing and c.target_id? and not c.hours? }, :on => :create
+  validates_presence_of :body, :unless => lambda { |c| c.task_comment? or c.uploads.to_a.any? or c.google_docs.any? }
 
   # was before_create, but must happen before format_attributes
   before_save   :copy_ownership_from_target, :if => lambda { |c| c.new_record? and c.target_id? }

@@ -1127,7 +1127,7 @@ de:
       subscribe_to_feeds: "Abonnieren Sie Nachrichtenfeeds..."
     navigation: 
       all_projects: "Alle Projekte"
-      new_project: +
+      new_project: + Neues Projekt
       welcome: Willkommen
     project_navigation: 
       all_conversations: "Alle Konversationen"
@@ -1269,11 +1269,6 @@ de:
     new: 
       submit: "Aufgabenliste hinzufügen"
       title: "Neue Aufgabenliste"
-    overview_box: 
-      ends_on: "Endet am:"
-      starts_on: "Startet am:"
-      this_list: "Diese Aufgabenliste"
-      undefined: "Nicht definiert"
     primer: 
       create_first: "Erstellen Sie die erste Aufgabenliste in diesem Projekt!"
       define_html: "Nutzen Sie Aufgaben, um <b>vorauszuplanen</b>, <b>Fortschritte zu erfassen</b> und <b>nachzuvollziehen, was gemacht worden ist</b>.<br/><i>Was? Wer? Wann?</i> Aufgaben können einen Status haben, eine zugeordnete Person und ein Fälligkeitsdatum."
@@ -1407,7 +1402,7 @@ de:
       tasks_for_today: "Heutige Aufgaben"
       tasks_for_tomorrow: "Aufgaben für Morgen"
       tasks_without_a_due_date: "Aufgaben ohne Enddatum"
-      you_receive_this_message: "Sie sind für den Email Dienst von Teambox angemeldet. Konfigurieren Sie Email Benachrichtigungen über Ihre %{link}"
+      you_receive_this_message_html: "Sie sind für den Email Dienst von Teambox angemeldet. Konfigurieren Sie Email Benachrichtigungen über Ihre %{link}"
     edit: 
       submit: "Konto aktualisieren"
       title_delete: "Konto löschen"

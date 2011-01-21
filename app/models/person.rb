@@ -79,13 +79,13 @@ class Person < ActiveRecord::Base
       INNER JOIN projects ON projects.id = people.project_id
       INNER JOIN users ON users.id = people.user_id
       WHERE people.project_id IN (#{project_ids.join(',')})
-        AND (people.deleted IS NULL OR people.deleted = 0)
+        AND (people.deleted IS NULL OR people.deleted IS FALSE)
       ORDER BY users.id = #{current_user.try(:id).to_i} DESC,users.login
     SQL
   end
   
   def user
-    User.find_with_deleted(user_id)
+    @user ||= user_id ? User.with_deleted.find_by_id(user_id) : nil
   end
 
   def to_xml(options = {})

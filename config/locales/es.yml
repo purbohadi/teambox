@@ -1401,7 +1401,7 @@ es:
       subscribe_to_feeds: "Suscribirme a las actividades..."
     navigation: 
       all_projects: Proyectos
-      new_project: +
+      new_project: + Nuevo Proyecto
       welcome: Bienvenido
     project_navigation: 
       affiliate_area: "Area de Afiliados"
@@ -1566,11 +1566,6 @@ es:
     new: 
       submit: Crear
       title: "Nueva lista de tareas"
-    overview_box: 
-      ends_on: "Termina el:"
-      starts_on: "Empieza el:"
-      this_list: "Esta lista de tareas"
-      undefined: Indefinido
     primer: 
       create_first: "Crea la primera lista de tareas!"
       define_html: "Usa tareas para <b>planificar</b>, <b>ver qué se ha hecho</b> y <b>no olvidar ideas futuras</b>.<br/><i>¿Qué? ¿Quién? ¿Cuándo?</i> Las tareas pueden tener un estado, un responsable y una fecha límite."
@@ -1713,7 +1708,7 @@ es:
       tasks_for_today: "Tareas para hoy"
       tasks_for_tomorrow: "Tareas para mañana"
       tasks_without_a_due_date: "Sin fecha fija"
-      you_receive_this_message: "Puedes desactivar estas notificaciones en %{link}"
+      you_receive_this_message_html: "Puedes desactivar estas notificaciones en %{link}"
     edit: 
       submit: Actualizar
       title_delete: "Borrar cuenta"

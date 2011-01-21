@@ -15,7 +15,7 @@ class User
 
   validates_length_of       :email,       :within => 6..100 #r@a.wk
   validates_uniqueness_of   :email,       :case_sensitive => false
-  # RAILS3 document this fucking syntax for message
+  
   validates                 :email,       :presence => true, :email => { :message => Authentication.bad_email_message }
   validate  :old_password_provided?, :if => lambda { |u| u.password_confirmation.present? and !u.performing_reset }, :on => :update
   
@@ -34,11 +34,13 @@ class User
   end
 
   def name
-    "#{first_name} #{last_name}"
+    I18n.t 'common.format_name', :first_name => first_name, :last_name => last_name
   end
 
   def short_name
-    "#{first_name.chars.first}. #{last_name}"
+     I18n.t 'common.format_name_short', :first_name => first_name, :last_name => last_name, 
+                                        :first_name_first_character => first_name.chars.first, 
+                                        :last_name_first_character => last_name.chars.first
   end
 
   def password_required?

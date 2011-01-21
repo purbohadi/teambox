@@ -12,7 +12,7 @@ Feature: Converting a conversation to a task
     And I wait for 2 seconds
     And I press "Convert"
     And I wait for 1 second
-    Then I should see "Politics" in the title
+    Then I should see "Politics" in the page title
     And I should see "created a task"
 
   Scenario: Converting a normal conversation on the overview page
@@ -23,7 +23,7 @@ Feature: Converting a conversation to a task
     And I wait for 2 seconds
     And I press "Convert"
     And I wait for 1 second
-    Then I should see "Politics"
+    Then I should see "Politics" in the thread title
     And I should see "created a task"
 
   Scenario: Converting a normal conversation on the overview page and adding a comment
@@ -35,7 +35,7 @@ Feature: Converting a conversation to a task
     And I wait for 2 seconds
     And I fill in "conversation_name" with "An exciting task for you"
     And I press "Convert"
-    And I wait for 1 second
+    And I wait for 3 seconds
     Then I should see "An exciting task for you" in the thread title
     And I should see "Do this now"
     And I should see "created a task"

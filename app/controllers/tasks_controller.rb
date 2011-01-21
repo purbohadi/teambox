@@ -10,7 +10,6 @@ class TasksController < ApplicationController
   def show
     respond_to do |f|
       f.html
-      f.frag { render :layout => false }
       f.js {
         @show_part = params[:part]
         render :template => 'tasks/reload'
@@ -63,9 +62,15 @@ class TasksController < ApplicationController
   end
 
   def update
-    authorize! :update, @task
-    @task.updating_user = current_user
-    success = @task.update_attributes params[:task]
+    if can? :update, @task
+      can? :update, @task
+      @task.updating_user = current_user
+      success = @task.update_attributes params[:task]
+    elsif can? :comment, @task
+      success = @task.update_attributes(:comments_attributes => params['task']['comments_attributes'])
+    else
+      authorize! :comment, @task
+    end
 
     respond_to do |f|
       f.html {

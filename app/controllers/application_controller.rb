@@ -18,7 +18,17 @@ class ApplicationController < ActionController::Base
                 :belongs_to_project?,
                 :load_community_organization,
                 :add_chrome_frame_header
-  
+
+  # If the parameter ?nolayout=1 is passed, then we will render without a layout
+  # If the parameter ?extractparts=1 is passed, then we will render blocks for content and sidebar
+  layout proc { |controller|
+    if controller.params[:nolayout]
+      nil
+    else
+      controller.params[:extractparts] ? "parts" : "application"
+    end
+  }
+
   private
 
     def check_permissions
@@ -106,8 +116,10 @@ class ApplicationController < ActionController::Base
     LOCALES_REGEX = /\b(#{ I18n.available_locales.join('|') })\b/
     
     def user_agent_locale
-      unless Rails.env.test?
+      unless (Rails.env.test? || Rails.env.cucumber?)
         request.headers['HTTP_ACCEPT_LANGUAGE'].to_s =~ LOCALES_REGEX && $&
+      else
+        :en
       end
     end
     

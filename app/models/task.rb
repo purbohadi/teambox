@@ -18,12 +18,11 @@ class Task < RoleRecord
   belongs_to :task_list, :counter_cache => true
   belongs_to :page
 
-  # RAILS3 fix with_deleted
-  belongs_to :assigned, :class_name => 'Person'#, :with_deleted => true
+  belongs_to :assigned, :class_name => 'Person'
   has_many :comments, :as => :target, :order => 'created_at DESC', :dependent => :destroy
 
   accepts_nested_attributes_for :comments, :allow_destroy => false,
-    :reject_if => lambda { |comment| %w[body hours human_hours uploads_attributes].all? { |k| comment[k].blank? } }
+    :reject_if => lambda { |comment| %w[body hours human_hours uploads_attributes google_docs_attributes].all? { |k| comment[k].blank? } }
 
   attr_accessible :name, :assigned_id, :status, :due_on, :comments_attributes
 
@@ -44,6 +43,10 @@ class Task < RoleRecord
   before_save :save_changes_to_comment, :if => :track_changes?
   before_save :save_completed_at
   before_update :remember_comment_created
+  
+  def assigned
+    @assigned ||= assigned_id ? Person.with_deleted.find_by_id(assigned_id) : nil
+  end
   
   def track_changes?
     (new_record? and not status_new?) or
@@ -127,7 +130,7 @@ class Task < RoleRecord
   end
 
   def user
-    user_id && User.find_with_deleted(user_id)
+    @user ||= user_id ? User.with_deleted.find_by_id(user_id) : nil
   end
   
   TRACKER_STATUS_MAP = {

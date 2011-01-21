@@ -10,6 +10,7 @@ group :rails do
   gem 'text-format', '>= 0.6.3', :require => 'text/format'
 end
 
+gem 'nokogiri'
 gem 'SystemTimer', '~> 1.2.0', :require => 'system_timer'
 gem 'whenever', '~> 0.4.1', :require => nil
 gem 'icalendar', '~> 1.1.3'
@@ -24,14 +25,10 @@ gem 'hpricot', '~> 0.8.2'
 gem 'json'
 gem 'oa-oauth', :require => 'omniauth/oauth'
 gem 'tilt'
-gem 'choices', :git => "git@github.com:teambox/choices.git"
-gem 'nokogiri'
+gem 'choices', :git => "git://github.com/teambox/choices.git"
 
-group :plugins do
-  gem 'will_paginate', '~> 2.3.14'
-end
-
-gem 'thinking-sphinx', '2.0.0', :require => 'thinking_sphinx'
+gem 'will_paginate', '~> 2.3.14'
+gem 'thinking-sphinx', '2.0.1', :require => 'thinking_sphinx'
 gem 'sprockets-rails', '~> 0.0.1'
 gem 'vestal_versions', '~> 1.2.2', :git => 'git://github.com/adamcooper/vestal_versions'
 gem 'paperclip', '~> 2.3.6'
@@ -49,6 +46,7 @@ end
 group :test, :development do
   gem 'rspec-rails', '~> 2.3.1'
   gem 'webrat'
+  gem 'fuubar'
 end
 
 # we don't call the group :test because we don't want them auto-required
@@ -56,8 +54,8 @@ group :testing do
   gem 'database_cleaner', '~> 0.5.0'
   gem 'rcov'
   gem 'factory_girl', '~> 1.3.2'
-  gem 'pickle', '~> 0.2.1'
-  gem 'cucumber-rails', '~> 0.3.0', :require => nil
-  gem 'capybara', '~> 0.3.5'
-  gem 'launchy', '~> 0.3.5'
+  gem 'pickle', '~> 0.4.4'
+  gem 'cucumber-rails', '~> 0.3.2', :require => nil
+  gem 'capybara', '~> 0.4.0'
+  gem 'launchy', '~> 0.3.7'
 end
